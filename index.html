@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller de Alistamiento UNAL</title>
+    <script>
+        const GAS_URL = 'TU_URL_APPS_SCRIPT_DEPLOY';
+        let currentView = '';
+        
+        async function loadView(view = '') {
+            currentView = view;
+            const url = view ? `${GAS_URL}?view=${view}` : GAS_URL;
+            
+            try {
+                document.getElementById('app-container').classList.add('loading');
+                const response = await fetch(url);
+                const html = await response.text();
+                document.getElementById('app-container').innerHTML = html;
+                
+                // Manejar navegación interna
+                document.querySelectorAll('a[data-view]').forEach(link => {
+                    link.onclick = (e) => {
+                        e.preventDefault();
+                        history.pushState(null, '', `/${link.dataset.view}`);
+                        loadView(link.dataset.view);
+                    };
+                });
+                
+            } catch (error) {
+                console.error('Error loading view:', error);
+                document.getElementById('app-container').innerHTML = `
+                    <div class="error">
+                        Error al cargar la aplicación. Por favor recarga la página.
+                    </div>
+                `;
+            } finally {
+                document.getElementById('app-container').classList.remove('loading');
+            }
+        }
+        
+        // Manejar navegación atrás/adelante
+        window.onpopstate = () => loadView(window.location.pathname.substring(1));
+        window.onload = () => loadView(window.location.pathname.substring(1));
+    </script>
+    <style>
+        :root {
+            --color-unal-verde: #2E7D32;
+            --color-unal-verde-oscuro: #1B5E20;
+            --color-unal-gris: #5A6268;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        #app-container {
+            min-height: 100vh;
+        }
+        
+        #app-container.loading::after {
+            content: "Cargando...";
+            display: block;
+            text-align: center;
+            padding: 2rem;
+            color: var(--color-unal-gris);
+        }
+        
+        .error {
+            color: #dc3545;
+            padding: 2rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container"></div>
+</body>
+</html>
